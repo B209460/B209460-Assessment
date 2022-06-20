@@ -1,16 +1,13 @@
-remove.packages(here)
-install.packages("here")
 library(here)
-
-remove.packages(dataMeta)
-
-install.packages("dataMeta")
 library(dataMeta)
 library (tidyverse)
 
-knitr::opts_chunk$set(echo = TRUE)
+CollectedData=read_csv(here("RawData", "CollectedDataFinal.csv"))
+head(CollectedData)
 
-CollectedData=read_csv(here("B209460-Assessment", "RawData", "CollectedDataFinal.csv"))
+CollectedData$period<-as.character(CollectedData$period)
+glimpse(CollectedData)
+getwd()
 
 glimpse(CollectedData) 
 
@@ -28,7 +25,10 @@ print(variable_type)
 linker<-build_linker(CollectedData, variable_description, variable_type)
 print(linker)
 
-dictionary <- build_dict(my.data = CollectedData, linker = linker)
 
+Dictionary <- build_dict(my.data = CollectedData, linker = linker, prompt_varopts= FALSE, option_description = NULL)
+
+
+remove(Dictionary)
 glimpse(dictionary)
 

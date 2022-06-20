@@ -3,14 +3,15 @@ title: "B209460"
 author: "Euan Vincent"
 date: "15/06/2022"
 output:
+  html_document: default
   word_document: default
   pdf_document: default
-  html_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
 # Introduction
 
 This script will load the the NHS England accident and emergency attendances and
@@ -146,6 +147,7 @@ ae %>%
   mutate_at(vars(attendances, breaches, admissions), comma) %>%
   # Format as a table
   kable()
+
 ```
 
 Data is then saved into the RawData folder within the project working directory
@@ -240,8 +242,8 @@ aeTest  %>%
   kable()
 
 
-### Our final task, is to save our ae_attendances_ENG_4hr_perform test data to 
-#our working data folder 'Data'
+### the final task, is to save our test data to 
+#my working data folder 'Data'
 write_csv(aeTest, here("Data", "ae_attendances_test.csv"))
 
 ```
@@ -264,18 +266,6 @@ has been defaulted to opt out.
 
 # Data dictionary for test data 
 The data dictionary associated with the test data collected using the Data 
-Capture tool is saved within the RawData folder and contrains descriptions of 
+Capture tool is saved within the RawData folder and contains descriptions of 
 each variable. 
 
-The dictionary can also be re-created using the below code 
-
-```{r a,message = FALSE, warning=FALSE}
-
-complete_CollectedData<-readRDS(here("RawData", "complete_CollectedData.rds"))
-
-```
-
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:

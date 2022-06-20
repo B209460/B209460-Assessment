@@ -1,17 +1,16 @@
 ---
-title: "B209460"
-author: "Euan Vincent"
-date: "15/06/2022"
+title: "Development of a data capture tool using data from NHS A&E departments"
+author: "B209460"
+date: "20/06/2022"
 output:
-  html_document: default
-  word_document: default
   pdf_document: default
+  word_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, eval=FALSE)
 ```
-
 # Introduction
 
 This script will load the the NHS England accident and emergency attendances and
@@ -92,10 +91,9 @@ library(lubridate)
 #you need to load it separately. 
 
 ```
-
 ## Uploading the data
 
-```{r a,message = FALSE, warning=FALSE}
+```{r}
 data(ae_attendances)
 ```
 
@@ -103,7 +101,7 @@ data(ae_attendances)
 We will quickly view the data to understand its structure and assess the 
 data quality. 
 
-```{r a,message = FALSE, warning=FALSE}
+```{r message = FALSE, warning=FALSE}
 ae<-ae_attendances
 #Store ae<-ae_attendances as a tbl_df.
 ae
@@ -130,7 +128,7 @@ can link the partitioned data sets to the raw data if required in the future.
 We will use the `rowid_to_column()` function to convert row identities to a 
 column named index.
 
-```{r a,message = FALSE, warning=FALSE}
+```{r message = FALSE, warning=FALSE}
 ae <- rowid_to_column(ae, "index")
 ```
 
@@ -139,7 +137,7 @@ To improve data legibility, The data has been formatted with a 1000 seperator
 for each of the numeric fields (attendances, breaches and admissions) and the 
 date field has been formatted to "MMM/YY".
 
-```{r a,message = FALSE, warning=FALSE}
+```{r message = FALSE, warning=FALSE}
 ae %>%
   # Set the period column to show in month-year format
   mutate_at(vars(period), format, "%b-%y") %>% 
@@ -151,7 +149,7 @@ ae %>%
 
 Data is then saved into the RawData folder within the project working directory
 
-```{r a,message = FALSE, warning=FALSE}
+```{r message = FALSE, warning=FALSE}
 write_csv(ae, here("RawData", "ae_attendances.csv"))
 ```
 
@@ -161,14 +159,13 @@ variables. The dplyr package is loaded by the tidyverse package, as one of its
 core components. dplyr provides a grammar of data manipulation, providing a
 consistent set of verbs that solve the most common data manipulation challenges
 
-After, data will be saved into our RawData folder
+After, data will be saved into the RawData folder
 
-```{r a,message = FALSE, warning=FALSE}
+```{r message = FALSE, warning=FALSE}
 ae<-ae %>% select(index, period, attendances, breaches, org_code)
 write_csv(ae, here("RawData", "ae_attendances_VariablesForAnalysis.csv"))
 
 ```
-
 ## Seperating into test and train datasets
 I will seperate the raw dataset into test and train datasets for the development
 of my data capture tool.  I will select 10 rows of data from my raw dataset to 
@@ -181,7 +178,7 @@ that every time we run this script, we will partition the raw data into the same
 test and training data. After brief formatting, the two seperate datasets 
 will then be saved as test and training. 
 
-```{r a,message = FALSE, warning=FALSE}
+```{r message = FALSE, warning=FALSE}
 prop<-(1-(15/nrow(ae)))
 # generates the proportion of test rows to training rows 
 
@@ -225,8 +222,8 @@ aeTestMarker  %>%
 'Data'
 write_csv(aeTestMarker, here("Data", "ae_attendances_test_marker.csv"))
 
-### We then need to set aside the remaining records for you to test 
-#(or collect with your) your data-capture tool.
+### We then need to set aside the remaining records to test 
+#our data-capture tool.
 aeTest  <- aeTest[2:nrow(aeTest),]
 
 #### Let's tabulate ae_attendances_ENG_4hr_perfom test data for your report
@@ -241,8 +238,8 @@ aeTest  %>%
   kable()
 
 
-### the final task, is to save our test data to 
-#my working data folder 'Data'
+### Our final task, is to save our ae_attendances_ENG_4hr_perform test data to 
+#our working data folder 'Data'
 write_csv(aeTest, here("Data", "ae_attendances_test.csv"))
 
 ```
@@ -256,10 +253,13 @@ The tool can be accessed via the Github repository, link below
 
 ## Consent
 
-The tool will collect informed consent from participants using a widgit which 
-has been defaulted to opt out.
+The tool will collect informed consent from participants using a widgit.
+The default option of which, is set to decline consent. 
 
 ## Access
+
+All scripts, Rawdata, Outputs and plans associated with this project can be 
+found within the following Github repository.
 
 [link to Github repository](https://github.com/B209460/B209460-Assessment)
 
@@ -267,4 +267,70 @@ has been defaulted to opt out.
 The data dictionary associated with the test data collected using the Data 
 Capture tool is saved within the RawData folder and contrains descriptions of 
 each variable. 
+
+The dictionary was produced using the R dataMeta package, the steps for this can
+be followed using R script "Creating a data dictionary.r", which is saved within
+the project RScripts folder. It can also be re-created using the below code 
+
+
+
+```{r message = FALSE, warning=FALSE}
+
+library(dataMeta)
+# The dataMeta package has a collection of functions that are designed to 
+#construct a data dictionary and append it to the original dataset as an 
+#attribute, along with other information generally provided in other software
+#as metadata. 
+
+CollectedData=read_csv(here("RawData", "CollectedDataFinal.csv"))
+#read in test data to create dictionary
+
+head(CollectedData)
+# review data set
+
+CollectedData$period<-as.character(CollectedData$period)
+#Convert date fields to character. This steps helps with some errors in creating
+#the dictionary
+
+glimpse(CollectedData)
+#confirm changes
+
+variable_description <- c("The index column that allows us to link the data 
+                          collected to the original ae_attendances data in the 
+                          'RawData' folder.",
+                          "The month that this activity relates to, stored as a
+                          date (1st of each month).",
+                          "The number of attendances for this department type at
+                          this organisation for this month.", 
+                          "The number of attendances that breached the four-hour
+                          target.", 
+                          "The Organisation data service (ODS) code for the 
+                          organisation. If you want to know the organisation
+                          associated with a particular ODS code, you can look
+                          it up from the following 
+                          address: https://odsportal.digital.nhs.uk
+                          /Organisation/Search.", 
+                          "The consent from the end-user to process and 
+                          share the data collected with the data capture tool.")
+print(variable_description)
+#Add the descriptions for each of the variables contained within the test data
+
+variable_type <- c(0, 1, 0, 0, 1, 1)
+#define each variable type (integer or other)
+
+print(variable_type)
+linker<-build_linker(CollectedData, variable_description, variable_type)
+print(linker)
+#The linker is an intermediary step before the creation of the dictionary
+
+
+Dictionary <- build_dict(my.data = CollectedData, linker = linker, 
+                         prompt_varopts= FALSE, option_description = NULL)
+#assembles the dictionary from constituent parts
+
+
+glimpse(dictionary)
+
+
+```
 
