@@ -3,9 +3,9 @@ title: "Development of a data capture tool using data from NHS A&E departments"
 author: "B209460"
 date: "20/06/2022"
 output:
-  html_document: default
-  word_document: default
   pdf_document: default
+  word_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -42,7 +42,7 @@ England for the years 2016/17 through 2018/19 (Apr-Mar).
 
 ## Loading required packages
 
-```{r a,message = FALSE, warning=FALSE, echo=FALSE}
+```{r a,message = FALSE, warning=FALSE}
 library(NHSRdatasets)
 #Outlined above
 

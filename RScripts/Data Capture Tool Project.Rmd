@@ -1,14 +1,14 @@
 ---
-title: "Development of a data capture tool using data from NHS A&E departments"
+title: "Feedback loops: Using data insight to stimulate data sharing across NHS Accident and Emergency departments."
 author: "B209460"
-date: "20/06/2022"
+date: "03/07/2022"
 output:
-  pdf_document: default
   word_document: default
   html_document: default
+  pdf_document: default
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE,Echo=FALSE, results='hide'}
 knitr::opts_chunk$set(echo = TRUE, eval=FALSE)
 ```
 # Introduction
@@ -42,7 +42,7 @@ England for the years 2016/17 through 2018/19 (Apr-Mar).
 
 ## Loading required packages
 
-```{r a,message = FALSE, warning=FALSE}
+```{r a,message = FALSE,include=FALSE, warning=FALSE, echo=FALSE}
 library(NHSRdatasets)
 #Outlined above
 
@@ -93,7 +93,7 @@ library(lubridate)
 ```
 ## Uploading the data
 
-```{r}
+```{r include=FALSE, Echo=FALSE, results='hide'}
 data(ae_attendances)
 ```
 
@@ -101,10 +101,9 @@ data(ae_attendances)
 We will quickly view the data to understand its structure and assess the 
 data quality. 
 
-```{r message = FALSE, warning=FALSE}
+```{r message = FALSE, include=FALSE, warning=FALSE, Echo=FALSE, results='hide'}
 ae<-ae_attendances
 #Store ae<-ae_attendances as a tbl_df.
-ae
 # review ae tibble with R
 ae %>% 
   map(is.na) %>%
@@ -128,7 +127,7 @@ can link the partitioned data sets to the raw data if required in the future.
 We will use the `rowid_to_column()` function to convert row identities to a 
 column named index.
 
-```{r message = FALSE, warning=FALSE}
+```{r message = FALSE, include=FALSE, warning=FALSE, Echo=FALSE, results='hide'}
 ae <- rowid_to_column(ae, "index")
 ```
 
@@ -137,7 +136,7 @@ To improve data legibility, The data has been formatted with a 1000 seperator
 for each of the numeric fields (attendances, breaches and admissions) and the 
 date field has been formatted to "MMM/YY".
 
-```{r message = FALSE, warning=FALSE}
+```{r message = FALSE,include=FALSE, warning=FALSE, Echo=FALSE, results='hide'}
 ae %>%
   # Set the period column to show in month-year format
   mutate_at(vars(period), format, "%b-%y") %>% 
@@ -149,7 +148,7 @@ ae %>%
 
 Data is then saved into the RawData folder within the project working directory
 
-```{r message = FALSE, warning=FALSE}
+```{r message = FALSE,include=FALSE, warning=FALSE, Echo=FALSE, results='hide'}
 write_csv(ae, here("RawData", "ae_attendances.csv"))
 ```
 
@@ -161,11 +160,69 @@ consistent set of verbs that solve the most common data manipulation challenges
 
 After, data will be saved into the RawData folder
 
-```{r message = FALSE, warning=FALSE}
+```{r message = FALSE,include=FALSE, warning=FALSE, Echo=FALSE, results='hide'}
 ae<-ae %>% select(index, period, attendances, breaches, org_code)
+
 write_csv(ae, here("RawData", "ae_attendances_VariablesForAnalysis.csv"))
 
 ```
+
+## Exploring data subset
+First lets summarise the data to get a better understanding of the variables we 
+will use.  I will use the dplyr glimpse function to review the variable types
+before finding the mean attendances and breaches for each org code, which I will
+sort in descending order to understand organisations are busiest. I will then 
+derive the total time period of the observed data to better understand the 
+summary statistics
+
+```{r message = FALSE,include=FALSE, warning=FALSE,Echo=FALSE}
+glimpse(ae)
+
+difftime(min(ae$period), max(ae$period), units = "weeks")/52
+
+ae %>% 
+  group_by(org_code) %>% 
+  summarise(average_monthly_attendance = round(mean(attendances)), 
+            mean_breaches = round(mean(breaches))) %>% 
+  arrange(desc(average_monthly_attendance), .by_group = FALSE,)
+```
+
+
+The glimpse function has assisted in my understanding of the data structure.
+The index column is type integer, period is type date, bother attendance and 
+breaches are of type double and organisation code is of type factor. 
+
+Through grouping and summarising I can also see that over a three year period,
+the busiest organisations were FRIMLEY HEALTH NHS FOUNDATION TRUST followed by 
+CENTRAL LONDON COMMUNITY HEALTHCARE NHS TRUST and 
+MID YORKSHIRE HOSPITALS NHS TRUST.  
+
+
+```{r message = FALSE,include=FALSE, warning=FALSE, Echo=FALSE, results='hide'}
+
+ae_benchmark<-ae %>% 
+  group_by(org_code) %>%
+  summarise_at(vars(attendances, breaches), sum) %>%
+  mutate(performance = 1 - breaches / attendances) %>% 
+  filter(performance<0.90) 
+
+sliced<-slice(ae_benchmark$org_code)
+
+
+
+
+
+ae %>% filter(-list) %>% 
+  ggplot(aes(x=.$attendances, y=.$breaches))+
+  geom_jitter()+
+  geom_smooth()
+
+breaches_regression<-lm(breaches~attendances, data = ae)
+
+summary(breaches_regression)
+```
+
+
 ## Seperating into test and train datasets
 I will seperate the raw dataset into test and train datasets for the development
 of my data capture tool.  I will select 10 rows of data from my raw dataset to 
@@ -178,7 +235,7 @@ that every time we run this script, we will partition the raw data into the same
 test and training data. After brief formatting, the two seperate datasets 
 will then be saved as test and training. 
 
-```{r message = FALSE, warning=FALSE}
+```{r message = FALSE,include=FALSE, warning=FALSE, Echo=FALSE, results='hide'}
 prop<-(1-(15/nrow(ae)))
 # generates the proportion of test rows to training rows 
 
@@ -274,7 +331,7 @@ the project RScripts folder. It can also be re-created using the below code
 
 
 
-```{r message = FALSE, warning=FALSE}
+```{r message = FALSE,include=FALSE, warning=FALSE,Echo=FALSE, results='hide'}
 
 library(dataMeta)
 # The dataMeta package has a collection of functions that are designed to 

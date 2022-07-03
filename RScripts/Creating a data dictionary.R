@@ -28,7 +28,5 @@ print(linker)
 
 Dictionary <- build_dict(my.data = CollectedData, linker = linker, prompt_varopts= FALSE, option_description = NULL)
 
-
-remove(Dictionary)
-glimpse(dictionary)
+glimpse(Dictionary)
 
